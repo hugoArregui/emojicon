@@ -20,6 +20,8 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.widget.EditText;
+import android.text.Editable;
+import android.text.TextWatcher;
 
 /**
  * @author Hieu Rocker (rockerhieu@gmail.com).
@@ -48,7 +50,30 @@ public class EmojiconEditText extends EditText {
         mEmojiconSize = (int) a.getDimension(R.styleable.Emojicon_emojiconSize, getTextSize());
         a.recycle();
         setText(getText());
+        addTextChangedListener(new TextWatcher() {
+            private boolean deletion = false;
+
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                deletion = (count - after) == 1;
+            }
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            public void afterTextChanged(Editable e) {
+                String s = e.toString();
+                if (deletion && s.length() > 0) {
+                    for (int i = 0 ; i < s.length(); i++) {
+                        char c = s.charAt(i);
+                        if (Character.isHighSurrogate(c) && (i+1 == s.length() || !Character.isLowSurrogate(s.charAt(i + 1)))) {
+                            e.delete(i, i + 1);
+                            break;
+                        }
+                    }
+                }
+            }
+        });
     }
+
 
     @Override
     protected void onTextChanged(CharSequence text, int start, int lengthBefore, int lengthAfter) {
